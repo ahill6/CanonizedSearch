@@ -18,8 +18,8 @@ import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Expr;
 
 public class DistanceCalculations{
-	String database = "jdbc:mysql://localhost:3306/searchrepair2";
-	String password = "S3@rchR3p@1r"; // TODO - move this to config file"
+	String database = "jdbc:mysql://localhost:xxxx/searchrepair2";
+	String password = "zzzz"; // TODO - move this to config file"
 	//TODO - the path to your database and your database password should be put here
 	
 	public DistanceCalculations(){
