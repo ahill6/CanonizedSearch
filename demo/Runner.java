@@ -46,7 +46,7 @@ public class Runner {
 	public static void main(String[] args){ 
 		Runner runme = new Runner();
 		String targetPreface = "ToyTests";
-		boolean databaseExists = true;
+		boolean databaseExists = false;
 		
 		Methods[] methods = {runme.new Methods("sumOrDifference",3),
 				runme.new Methods("grade",3),runme.new Methods("returnMin",3),
@@ -65,7 +65,7 @@ public class Runner {
 					conf.setProperty("target", targetPreface);
 					conf.setProperty("classpath", "${jpf-symbc}/build/examples");
 					conf.setProperty("symbolic.dp", "no_solver");
-					conf.setProperty("listener", ".symbc.andy.CodeCharacterizationListener");
+					conf.setProperty("listener", ".symbc.repairproject.CodeCharacterizationListener");
 					conf.setProperty("vm.storage.class", "nil");
 					conf.setProperty("search.depth_limit", "30");
 								

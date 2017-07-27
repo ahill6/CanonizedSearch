@@ -2,7 +2,6 @@ package gov.nasa.jpf.symbc.repairproject;
 
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
-import gov.nasa.jpf.JPFException;
 import gov.nasa.jpf.PropertyListenerAdapter;
 import gov.nasa.jpf.vm.ChoiceGenerator;
 import gov.nasa.jpf.vm.VM;
@@ -23,7 +22,6 @@ import gov.nasa.jpf.symbc.numeric.Comparator;
 import gov.nasa.jpf.symbc.numeric.Constraint;
 import gov.nasa.jpf.symbc.numeric.Expression;
 import gov.nasa.jpf.symbc.numeric.IntegerConstant;
-import gov.nasa.jpf.symbc.numeric.IntegerExpression;
 import gov.nasa.jpf.symbc.numeric.MinMax;
 import gov.nasa.jpf.symbc.numeric.Operator;
 import gov.nasa.jpf.symbc.numeric.PCChoiceGenerator;
@@ -35,10 +33,8 @@ import gov.nasa.jpf.symbc.numeric.SymbolicConstraintsGeneral;
 import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
 import gov.nasa.jpf.symbc.numeric.SymbolicReal;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.sql.CallableStatement;
@@ -65,7 +61,6 @@ import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
 import com.microsoft.z3.Expr;
 import com.microsoft.z3.IntExpr;
-import com.microsoft.z3.Model;
 import com.microsoft.z3.RealExpr;
 import com.microsoft.z3.Solver;
 import com.microsoft.z3.Status;
@@ -74,62 +69,12 @@ import com.microsoft.z3.Z3Exception;
 public class CodeCharacterizationListener extends PropertyListenerAdapter {
 	// helper classes to provide organization for expressions which does not already exist in JPF/SPF
 	// TODO - verify not needed and remove
-	private class NormalForm{
-		private List<Term> left;
-		private Comparator op;
-		private double constant;
-		private NormalForm(Comparator o, Term...terms){
-			for (Term t : terms){
-				left.add(t);
-			}
-			op = o;
-		}
-		
-		private List<Term> getLeft(){
-			return left;
-		}
-		
-		private Comparator getOp(){
-			return op;
-		}
-		
-	}
 	
-	private class IntegerTerm{
-		IntegerExpression coefficient;
-		IntegerExpression base;
-		IntegerExpression exponent;
-		
-		private IntegerTerm(IntegerExpression c, IntegerExpression b, IntegerExpression e){
-			coefficient = c;
-			base = b;
-			exponent = e;
-		}
-	}
 	
-	private class RealTerm{
-		RealExpression coefficient;
-		RealExpression base;
-		RealExpression exponent;
-		private RealTerm(RealExpression c, RealExpression b, RealExpression e){
-			coefficient = c;
-			base = b;
-			exponent = e;
-		}
-	}
+	private String database = "jdbc:mysql://localhost:3306/searchrepair2";
+	private String password = "S3@rchR3p@1r";
+	// TODO - ****** REPLACE ABOVE WITH YOUR DB PATH
 	
-	private class Term{
-		Expression coefficient;
-		Expression base;
-		Expression exponent;
-		boolean constant;
-		private Term(Expression c, Expression b, Expression e, boolean con){
-			coefficient = c;
-			base = b;
-			exponent = e;
-			constant = con;
-		}
-	}
 	
 	// Class variables
 	Config confFile;
@@ -141,7 +86,7 @@ public class CodeCharacterizationListener extends PropertyListenerAdapter {
 	String hashValue;
 	String target;
 
-	Set<Vector> methodSequences = new LinkedHashSet<Vector>(); // TODO - verify not needed and remove
+	//Set<Vector> methodSequences = new LinkedHashSet<Vector>(); // TODO - verify not needed and remove
 
 	HashSet<String> varDeclarations = new HashSet<String>();
 	HashMap<String, String> typeMap = new HashMap<String, String>();
@@ -200,46 +145,6 @@ public class CodeCharacterizationListener extends PropertyListenerAdapter {
 	}
 	 */
 	
-	// TODO - verify not needed and remove
-	private void compareExpr(Expr one, Expr two){
-		String string1 = "TestPaths.arrayMedian(sym#sym#sym)-unittests.tmp";
-		String string2 = "TestPaths.arrayMedian(sym#sym#sym)-final.tmp";
-		String string3 = "TestPaths.arrayMedian(sym#sym#sym)-declarations.tmp";
-		BoolExpr a = ctx.parseSMTLIB2File(infile+string3, null, null, null, null);
-		System.out.println(a);
-
-		System.out.println("Compare expr");
-		System.out.println(one.compareTo(two));
-		System.exit(0);
-	}
-	
-	// learning how to import an SMT-LIB file and use it.
-	private void importModel(){
-		String string1 = "TestPaths.arrayMedian(sym#sym#sym)-unittests.tmp";
-		String string2 = "TestPaths.arrayMedian(sym#sym#sym)-final.tmp";
-		String string3 = "TestPaths.arrayMedian(sym#sym#sym)-declarations.tmp";
-		String testString = "test.txt";
-		System.out.println("---------------------------------------------------");
-		BoolExpr a = null;
-		System.out.println("---------------------------------------------------");
-		try{
-			a = ctx.parseSMTLIB2File(infile+testString, null, null, null, null);
-		}
-		catch(JPFException e){
-			System.out.println(e.getMessage());
-			e.printStackTrace();
-		}
-		System.out.println(a);
-		System.out.println(a.getArgs().length);
-		System.out.println(a.getSort());
-		System.out.println(a.getSExpr());
-		System.out.println(a.getNumArgs());
-		System.out.println(a.getFuncDecl());
-		for(Expr b : a.getArgs()){
-			System.out.println(b);
-		}
-	}
-	
 	// helper method to get a list of variables in constraints for renaming
 	private List<Expr> listVars(Expr[] expr){
 		//System.out.println("list vars");
@@ -284,225 +189,12 @@ public class CodeCharacterizationListener extends PropertyListenerAdapter {
 	}
 	
 	
-	private HashMap<String, ArrayList<Expr>> listVarsMap(Expr[] expr){
-		System.out.println("list vars map");
-		HashMap<String, HashSet<Expr>> vars = new HashMap<String, HashSet<Expr>>();
-		HashMap<String, ArrayList<Expr>> finVars = new HashMap<String, ArrayList<Expr>>();
-		
-		for (Expr e : expr){
-			for (Expr f : e.getArgs()){
-				if (f.isConst()){
-					// find kind via method call
-					String type = getVarTypeString(f);
-					HashSet<Expr> tmp = vars.get(type);
-					try{
-						if (tmp != null){
-							tmp.add(f);
-						}
-						else{
-							tmp = new HashSet<Expr>();
-							tmp.add(f);
-						}
-					}
-					catch(Exception ee){
-						System.out.println(f.getSExpr());
-						System.out.println(tmp);
-						System.out.println(type);
-						ee.printStackTrace();
-						System.exit(1);
-					}
-					vars.put(type, tmp);
-					//System.out.println("done");
-				}
-				else{
-					Expr[] tmp = {f};
-					List<Expr> tmp2 = listVars(tmp);
-					//System.out.println("Else");
-					for (Expr g : tmp2)
-					{
-						String type = getVarTypeString(g);
-						HashSet<Expr> tmp3 = vars.get(type);
-						if (tmp3 != null){
-							tmp3.add(g);
-						}
-						else{
-							tmp3 = new HashSet<Expr>();
-							tmp3.add(g);
-						}
-						vars.put(type, tmp3);
-						//System.out.println("done done");
-					}
-				}
-			}
-		}
-		//System.out.println("HERE SUCKA!");
-		for (String h : vars.keySet()){
-			//System.out.println(h);
-			ArrayList<Expr> tmp = new ArrayList<Expr>();
-			//System.out.println(tmp);
-			tmp.addAll(vars.get(h));
-			//System.out.println(tmp);
-			finVars.put(h, tmp);
-			//System.out.println("next");
-		}
-		return finVars;
-	}
-	
-	private String getVarTypeString(Expr e){
-		System.out.println("get var type string");
-		try{
-			return e.getSort().toString();
-		}
-		catch(Exception ex){
-			System.out.println(ex.toString());
-			System.exit(0);
-		}
-		// need to use the isInt, isIntNum, etc. methods?
-		return null;
-	}
-	
-	private void write(HashMap<Integer, List<BoolExpr>> pcs) {
-		// TODO - verify not needed and delete
-		System.out.println("write hash map");
-		String file = outfile + String.valueOf(hashValue) + "-final.tmp";
-
-		try {
-			BufferedWriter bw = new BufferedWriter(new FileWriter(file, false));
-			for (Integer k : pathConstraints.keySet()){
-				bw.append("Constraint # " + k + " : " + pathConstraints.get(k).size() + "\n");
-				for (BoolExpr g : pathConstraints.get(k)){
-					bw.append(g + "\n");
-				}
-				bw.append("\n");
-			}
-			filesWritten.add(file);
-			bw.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
 	private void write(List<BoolExpr> pcs) {
 		// print Path Constraints to file
 		System.out.println("write");
-		
-		String finalFile = outfile + String.valueOf(hashValue) + "-final.tmp";
-		String unitTestsFile = outfile + String.valueOf(hashValue) + "-unittests.tmp";
-		String declarationsFile = outfile + String.valueOf(hashValue) + "-declarations.tmp";
-
-		try {
-			
-			BufferedWriter bw = new BufferedWriter(new FileWriter(finalFile, false));
-			bw.append(pcs.size() + "\n");
-			for (BoolExpr g : pcs){
-				bw.append(g + "\n");
-			}
-			bw.append("\n");
-			filesWritten.add(finalFile);
-			bw.close();
-			
-			BufferedWriter bw2 = new BufferedWriter(new FileWriter(unitTestsFile, false));
-			BufferedWriter bw3 = new BufferedWriter(new FileWriter(declarationsFile, false));
-
-			for (BoolExpr g : pcs)
-			{
-				Solver s = ctx.mkSolver();
-				s.add(g);
-				if(s.check() == Status.SATISFIABLE){
-					Model m = s.getModel();
-					
-					/*
-					for (BoolExpr be : s.getAssertions()){
-						System.out.println(be);
-					}
-					System.out.println(m.toString());
-					*/
-					List<UnitTest> uTests = new ArrayList<UnitTest>();
-					List<Expr> vars = listVars(s.getAssertions());
-					HashMap<String, ArrayList<Expr>> varsUnit = listVarsMap(s.getAssertions());
-					List<String> tmp = new ArrayList<String>();
-					for (Expr v : vars){
-						tmp.add(v.getSExpr() + "="+m.eval(v, false));
-					}
-					for (String ky : varsUnit.keySet()){
-						List<String> unitsTmp = new ArrayList<String>();
-						bw2.append(ky+"-");
-						for (Expr val : varsUnit.get(ky)){
-							unitsTmp.add(val.getSExpr());
-							uTests.add(new UnitTest(val.getSExpr(), m.eval(val, false).toString(), ky));
-						}
-						bw2.append(unitsTmp.stream().collect(Collectors.joining(","))+";");
-					}
-					bw2.append("////");
-					bw2.append(tmp.stream().collect(Collectors.joining(","))+"\n");
-					bw3.append(m.toString()+"\n");
-					
-					// TODO - putting the uTest stuff here makes sense from a flow and scope perspective, but not from separation of concerns.
-					// change?
-					
-					// Yup, almost certainly need to split this stuff up.
-					// TODO - need to make this the actual text (do I?  not just a pointer to URL?), not just file name
-					//addMethodToDatabase(hashValue, uTests);
-					System.out.println(hashValue);
-					writeUnitTestsToDB(uTests);
-					writeConstraintsToDB(pcs);
-				}
-			}
-			filesWritten.add(unitTestsFile);
-			bw2.close();
-			bw3.close();
-		} catch (IOException e) {
-			e.printStackTrace();
+		writeConstraintsToDB(pcs);
 		}
-		
-	}
 	
-	private void write(String k, boolean append){
-		String path = "";
-		for (String var : varDeclarations) {
-			//System.out.println(var);
-			path += var + "\n";
-		}
-		k += "\n";
-
-		//String file = outfile + String.valueOf(hashValue) + "path-" + pathcount + ".tmp";
-		String file = outfile + String.valueOf(hashValue) + ".tmp";
-
-		try {
-			BufferedWriter bw = new BufferedWriter(new FileWriter(file, append));
-			bw.append(k);
-			//System.out.println("File: " + file);
-			filesWritten.add(file);
-			bw.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		pathCount++;
-	}
-
-	private void write(String k){
-		boolean append = false;
-		String path = "";
-		for (String var : varDeclarations) {
-			//System.out.println(var);
-			path += var + "\n";
-		}
-
-		String file = outfile + String.valueOf(hashValue) + "path-" + pathcount + ".tmp";
-		//String file = outfile + target + "-path-" + pathcount + ".tmp";
-
-		try {
-			BufferedWriter bw = new BufferedWriter(new FileWriter(file, append));
-			bw.append(k);
-			//System.out.println("File: " + file);
-			filesWritten.add(file);
-			bw.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		pathCount++;
-	}
 	int pathcount = 0;
 	
 	public void searchFinished(Search search) {
@@ -540,6 +232,7 @@ public class CodeCharacterizationListener extends PropertyListenerAdapter {
 		
 		if (unitTestSetId ==-1){
 			System.out.println("Database Method Creation Problem for " + methodName);
+			System.exit(1);
 		}
 	}
 
@@ -1268,21 +961,6 @@ public class CodeCharacterizationListener extends PropertyListenerAdapter {
 
 	public static int pathCount = 0;
 
-	private String incrementVar(String varName,
-			HashMap<String, Integer> incrementCounts) {
-		System.out.println("Increment var");
-		int counts;
-		if (incrementCounts.containsKey(varName)) {
-			counts = incrementCounts.get(varName);
-			counts++;
-		} else {
-			counts = 1;
-		}
-		incrementCounts.put(varName, counts);
-		return varName + counts;
-	}
-
-
 	private Vector<Instruction> getInstructionSequence(ChoiceGenerator<?>[] cgs) {
 		System.out.println("get instruction sequence");
 		// A method sequence is a vector of strings
@@ -1371,14 +1049,16 @@ public class CodeCharacterizationListener extends PropertyListenerAdapter {
 		try{
 			Class.forName("com.mysql.jdbc.Driver");  
 			
-			Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/SearchRepair","root","S3@rchR3p@1r"); 
-			
+			Connection con = DriverManager.getConnection(database,"root",password); 
+			/*
 			// for each unit test, make a unit test tied to this set id
 			CallableStatement cStmt = con.prepareCall("{? = call GET_MID(?)}");
 			cStmt.registerOutParameter(1, java.sql.Types.INTEGER);
 			cStmt.setObject("UTSETID", unitTestSetId);
 			cStmt.execute();
 			int mid = cStmt.getInt(1);
+			*/
+			int mid = unitTestSetId;
 			
 			for (BoolExpr b : pcs)
 			{
@@ -1415,48 +1095,12 @@ public class CodeCharacterizationListener extends PropertyListenerAdapter {
 		}
 	}
 	
-	private void writeUnitTestsToDB(List<UnitTest> uts){
-		System.out.println("write unit tests to db");
-
-		try{
-			Class.forName("com.mysql.jdbc.Driver");  
-			
-			Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/SearchRepair","root","S3@rchR3p@1r"); 
-			
-			// for each unit test, make a unit test tied to this set id
-			CallableStatement cStmt2 = con.prepareCall("{? = call GET_UID()}");
-			cStmt2.registerOutParameter(1, java.sql.Types.INTEGER);
-			cStmt2.execute();
-			int unitTestId = cStmt2.getInt(1);
-			for (UnitTest u : uts)
-			{
-				// make a unit test
-				PreparedStatement ps = con.prepareStatement("insert into SearchRepair.UNIT_TESTS (UTID, TYPE, VALUE) VALUES (?,?,?) ");
-				ps.setInt(1, unitTestId);
-				ps.setString(2, u.type);
-				ps.setString(3, u.value);
-				ps.execute();
-			}
-			
-			// add an entry to the unit tests <--> unit test sets with unitTestSetId and unitTestId
-			PreparedStatement ps2 = con.prepareStatement("insert into SearchRepair.UT_SETS (UTID, UT_SET_ID) VALUES (?,?)");
-			ps2.setInt(1, unitTestId);
-			ps2.setInt(2, unitTestSetId);
-			ps2.execute();
-			
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-	}
-	
 	private int addMethod(String text) {
 		int uts = -1;
 		try {
 			// Connect to DB (ideally don't hard-code the password or connection string)
 			Class.forName("com.mysql.jdbc.Driver");
-			Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/SearchRepair","root","S3@rchR3p@1r"); 
+			Connection con = DriverManager.getConnection(database,"root",password); 
 			
 			// TODO - get rid of this or put the method text in a different kind of db (remis?  rebis?)
 			//text ="placeholder";
@@ -1507,7 +1151,7 @@ public class CodeCharacterizationListener extends PropertyListenerAdapter {
 					*/
 			Class.forName("com.mysql.jdbc.Driver");  
 			
-			Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306","root","S3@rchR3p@1r"); 
+			Connection con = DriverManager.getConnection(database,"root",password); 
 			
 			// parse the files
 			for (File f : methodText)
@@ -1565,20 +1209,20 @@ public class CodeCharacterizationListener extends PropertyListenerAdapter {
 					//Real-REAL_228;Int-c,a,b;////c=0,a=0,b=0,REAL_228=0
 		
 					// for each unit test, make a unit test tied to this set id
-					CallableStatement cStmt2 = con.prepareCall("{? = call GET_UID()}");
+					CallableStatement cStmt2 = con.prepareCall("{? = call .GET_UID()}");
 					cStmt2.registerOutParameter(1, java.sql.Types.INTEGER);
 					cStmt2.execute();
 					int unitTestId = cStmt.getInt(1);
 					
 					// make a unit test
-					PreparedStatement ps = con.prepareStatement("insert into SearchRepair.UNIT_TESTS (UTID, TYPE, VALUE) VALUES (?,?,?) ");
+					PreparedStatement ps = con.prepareStatement("insert into searchrepair2.UNIT_TESTS (UTID, TYPE, VALUE) VALUES (?,?,?) ");
 					ps.setInt(1, unitTestId);
 					ps.setString(2, type);
 					ps.setString(3, value);
 					ps.execute();
 					
 					// add an entry to the unit tests <--> unit test sets with unitTestSetId and unitTestId
-					PreparedStatement ps2 = con.prepareStatement("insert into SearchRepair.UT_SETS (UTID, UT_SET_ID) VALUES (?,?)");
+					PreparedStatement ps2 = con.prepareStatement("insert into searchrepair2.UT_SETS (UTID, UT_SET_ID) VALUES (?,?)");
 					ps2.setInt(1, unitTestId);
 					ps2.setInt(2, unitTestSetId);
 					ps2.execute();

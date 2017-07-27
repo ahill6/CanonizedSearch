@@ -18,7 +18,7 @@ import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Expr;
 
 public class DistanceCalculations{
-	String database = "jdbc:mysql://localhost:3306/SearchRepair";
+	String database = "jdbc:mysql://localhost:3306/searchrepair2";
 	String password = "S3@rchR3p@1r"; // TODO - move this to config file"
 	//TODO - the path to your database and your database password should be put here
 	
@@ -494,7 +494,7 @@ private List<String> fetchAllMethodNames(){
 		Connection con = DriverManager.getConnection(database,"root",password); 
 		
 		// for each unit test, make a unit test tied to this set id
-		PreparedStatement ps = con.prepareStatement("select txt from searchrepair.method_text_tmp");
+		PreparedStatement ps = con.prepareStatement("select txt from searchrepair2.method_text_tmp");
 		ps.execute();
 		ResultSet rs = ps.getResultSet();
 		
@@ -525,7 +525,7 @@ private List<String> fetchOtherMethodNames(String name){
 		Connection con = DriverManager.getConnection(database,"root",password); 
 		
 		// for each unit test, make a unit test tied to this set id
-		PreparedStatement ps = con.prepareStatement("select txt from searchrepair.method_text_tmp where txt!=?");
+		PreparedStatement ps = con.prepareStatement("select txt from searchrepair2.method_text_tmp where txt!=?");
 		ps.setString(1, name);
 		ps.execute();
 		ResultSet rs = ps.getResultSet();
@@ -558,7 +558,7 @@ private List<String> fetchConstraints(String name){
 		
 		// for each unit test, make a unit test tied to this set id
 		//System.out.println(name);
-		PreparedStatement ps = con.prepareStatement("select pc from searchrepair.method_text_tmp inner join searchrepair.constraints_tmp using(mid) where txt=?");
+		PreparedStatement ps = con.prepareStatement("select pc from searchrepair2.method_text_tmp inner join searchrepair2.constraints_tmp using(mid) where txt=?");
 		ps.setString(1, name);
 		ps.execute();
 		ResultSet rs = ps.getResultSet();
