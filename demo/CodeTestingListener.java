@@ -74,8 +74,8 @@ import com.microsoft.z3.Z3Exception;
 public class CodeTestingListener extends PropertyListenerAdapter {
 	// helper classes to provide organization for expressions which does not already exist in JPF/SPF
 	// TODO - verify not needed and remove
-	private String database = "jdbc:mysql://localhost:3306/SearchRepair";
-	private String password = "S3@rchR3p@1r";
+	private String database = "jdbc:mysql://localhost:xxxx/SearchRepair";
+	private String password = "zzzz";
 	private class NormalForm{
 		private List<Term> left;
 		private Comparator op;
