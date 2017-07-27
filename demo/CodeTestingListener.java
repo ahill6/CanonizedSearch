@@ -74,6 +74,8 @@ import com.microsoft.z3.Z3Exception;
 public class CodeTestingListener extends PropertyListenerAdapter {
 	// helper classes to provide organization for expressions which does not already exist in JPF/SPF
 	// TODO - verify not needed and remove
+	private String database = "jdbc:mysql://localhost:3306/SearchRepair";
+	private String password = "S3@rchR3p@1r";
 	private class NormalForm{
 		private List<Term> left;
 		private Comparator op;
@@ -1312,7 +1314,7 @@ public class CodeTestingListener extends PropertyListenerAdapter {
 		try{
 			Class.forName("com.mysql.jdbc.Driver");  
 			
-			Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/SearchRepair","root","S3@rchR3p@1r"); 
+			Connection con = DriverManager.getConnection(database,"root",password); 
 			
 			// for each unit test, make a unit test tied to this set id
 			CallableStatement cStmt = con.prepareCall("{? = call GET_MID(?)}");
@@ -1362,7 +1364,7 @@ public class CodeTestingListener extends PropertyListenerAdapter {
 		try{
 			Class.forName("com.mysql.jdbc.Driver");  
 			
-			Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/SearchRepair","root","S3@rchR3p@1r"); 
+			Connection con = DriverManager.getConnection(database,"root",password); 
 			
 			// for each unit test, make a unit test tied to this set id
 			CallableStatement cStmt2 = con.prepareCall("{? = call GET_UID()}");
@@ -1397,7 +1399,7 @@ public class CodeTestingListener extends PropertyListenerAdapter {
 		try {
 			// Connect to DB (ideally don't hard-code the password or connection string)
 			Class.forName("com.mysql.jdbc.Driver");
-			Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/SearchRepair","root","S3@rchR3p@1r"); 
+			Connection con = DriverManager.getConnection(database,"root",password); 
 			
 			// TODO - get rid of this or put the method text in a different kind of db (remis?  rebis?)
 			//text ="placeholder";
@@ -1448,7 +1450,7 @@ public class CodeTestingListener extends PropertyListenerAdapter {
 					*/
 			Class.forName("com.mysql.jdbc.Driver");  
 			
-			Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306","root","S3@rchR3p@1r"); 
+			Connection con = DriverManager.getConnection(database,"root",password); 
 			
 			// parse the files
 			for (File f : methodText)
