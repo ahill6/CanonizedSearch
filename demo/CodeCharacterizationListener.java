@@ -71,8 +71,8 @@ public class CodeCharacterizationListener extends PropertyListenerAdapter {
 	// TODO - verify not needed and remove
 	
 	
-	private String database = "jdbc:mysql://localhost:3306/searchrepair2";
-	private String password = "S3@rchR3p@1r";
+	private String database = "jdbc:mysql://localhost:xxxx/searchrepair2";
+	private String password = "zzzz";
 	// TODO - ****** REPLACE ABOVE WITH YOUR DB PATH
 	
 	
