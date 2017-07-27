@@ -1,4 +1,4 @@
-package gov.nasa.jpf.symbc.miner;
+package gov.nasa.jpf.symbc.repairproject;
 
 
 import java.io.BufferedReader;
