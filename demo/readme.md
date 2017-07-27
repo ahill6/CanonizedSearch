@@ -2,7 +2,7 @@
 # CanonizedSearchRepair
 
 ## Instructions
-To run, overwrite TestPaths.java and TestPaths.jpf with the files from this repo, all others should go in a new package in SPF main (gov.nasa.jpf.symbc.repairproject).
+To run, make a new file ToyTests.java in the examples folder (with the file from this repo).  All others should go in a new package in SPF main (gov.nasa.jpf.symbc.repairproject).
 
 - Make sure that MySQL is installed and up to date on your machine.
 - Use creation_script.sql to create the DB.
