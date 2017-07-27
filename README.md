@@ -8,7 +8,9 @@ To run, overwrite TestPaths.java and TestPaths.jpf with the files from this repo
 - Change the "database" and "password" class variables in DistanceCalculations.java to match your MySQL database path and password.
 - Run Runner.java
 
-N.B. If desired to speed future runs, setting the databaseExists variable in Runner's main to true will skip the database population step.
+N.B. This was tested on a Mac, it is possible there are problems on a PC.  Let me know if there are any issues.
+
+N.B. To speed up future runs, once the database is created you can set the databaseExists variable in Runner's main to true.  This will skip the database population step, avoiding duplicates and speeding execution.
 
 ## Discussion
 This demo takes a handful of sample methods and finds the symbolic constraints, populates the database, then searches for the five nearest matches according to both Edit distance.  These matches are displayed to stdout, although the capacity exists to print them to a file instead.
