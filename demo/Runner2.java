@@ -1,30 +1,31 @@
 package gov.nasa.jpf.symbc.csar;
 
+import java.io.File;
+import java.io.FilenameFilter;
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.JPFConfigException;
 import gov.nasa.jpf.JPFException;;
 
 /**
- * 
- * Demo Code Characterization (DB creation for CSAR)
+ * Demo code testing with CSAR
  * 
  * @author Andrew Hill
  */
-public class Runner {
+public class Runner2 {
 	/**
 	 * Helper class which organizes storage of SPF-relevant method information 
 	 * to simplify symbolic execution.
 	 *
 	 */
-	public final class Methods{
+	private final class Methods{
 		private String name;
 		private int numParams;
 		/**
 		 * @param a method name
 		 * @param b number of method parameters
 		 */
-		public Methods(String a, int b){
+		private Methods(String a, int b){
 			name = a;
 			numParams = b;
 		}
@@ -64,34 +65,50 @@ public class Runner {
 	
 
 	/**
-	 * Gives an example of using a Methods array to symbolically characterize multiple methods.  In this case, the 
-	 * methods are all located in the src/examples folder, in ToyTests.java.
+	 * Gives an example of using CSAR to measure find closest methods.
+	 * <p>
+	 * In this case, it is assumed that the methods have identical names and number of input parameters, specified in <i>methods</i>;
+	 * are in separate files, each of which includes <i>target</i> in the filename; and each file is in <i>targetFolder</i>
 	 */
 	public static void main(String[] args){ 
-		Runner runme = new Runner();
-		String targetPreface = "ToyTests";
-		boolean databaseExists = false;
+		Runner2 runme = new Runner2();
+		String target = "ToyTests.java"; // Change to name of file(s) or keywords in names of files to be executed
+		// TODO - targetFolder must be changed to be the path to the folder containing files which you wish to test
+		String targetFolder = "/Users/Documents/workspace/jpf-symbc/src/examples";  
+		Methods[] methods = {runme.new Methods("grade", 3)};
 		
-		Methods[] methods = {runme.new Methods("grade2",3)};
-		
-		if (!databaseExists){
+		String[] files = new File(targetFolder).list(new FilenameFilter() {
+	    	  @Override
+	    	  public boolean accept(File current, String name) {
+	    	    return (new File(current, name).getName().contains(target));
+	    	  }});
+
+		int count = 0 ;
+		int totes = files.length;
+		for (String targetPreface : files){
+			if (count < 0){ // Changing this value can be used to restart a run at a specific point as needed
+				count++;
+				continue;
+			}
+			
+			System.out.println(count++ + "/" + totes);
 			try {
 					Config conf = JPF.createConfig(args);
 		
 					// ... modify config according to your needs
-					conf.setProperty("target", targetPreface);
+					conf.setProperty("target", targetPreface.replace(".java", ""));
 					conf.setProperty("classpath", "${jpf-symbc}/build/examples");
 					conf.setProperty("symbolic.dp", "no_solver");
-					conf.setProperty("listener", ".symbc.csar.CodeCharacterizationListener");
-					//conf.setProperty("listener", ".symbc.csar.CodeTestingListener");
+					//conf.setProperty("listener", ".symbc.csar.CodeCharacterizationListener"); 
+					conf.setProperty("listener", ".symbc.csar.CodeTestingListener");
+					conf.setProperty("vm.storage.class", "nil");
 					conf.setProperty("search.depth_limit", "30");
-								
+
 					for (int i=0; i<methods.length; i++){
 						String thisOne = conf.getTarget() + "." + methods[i].getName() + "(" + makeParams(methods[i].getNumParams()) + ")"; 
 						conf.setProperty("symbolic.method", thisOne);
 						System.out.println(thisOne);
 						JPF jpf = new JPF(conf);
-		
 						jpf.run();
 						if (jpf.foundErrors()){
 							System.out.println("Whoops");
