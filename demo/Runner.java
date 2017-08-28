@@ -92,6 +92,7 @@ public class Runner {
 				System.out.println("JPF Exception");
 				System.out.println(jx);
 			}
+			System.gc();
 		}
 
 		ArrayList<String> methodNames = new ArrayList<String>();
